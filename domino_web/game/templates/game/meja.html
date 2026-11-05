@@ -1,0 +1,202 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Higgs Domino Island Style</title>
+    <style>
+        body { 
+            background: radial-gradient(circle, #2E7D32 0%, #1B5E20 100%); 
+            color: white; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            text-align: center; margin: 0; padding: 20px;
+        }
+        
+        .area-meja { 
+            background-color: rgba(0,0,0,0.25); border-radius: 20px; padding: 40px 10px; 
+            margin: 20px auto; max-width: 95%; box-shadow: inset 0 0 20px rgba(0,0,0,0.6);
+            position: relative; 
+            z-index: 10;
+        }
+        
+        .meja-scroll { 
+            display: flex; flex-wrap: nowrap; overflow-x: auto; padding: 30px; 
+            align-items: center; justify-content: center;
+            scrollbar-width: thin; scrollbar-color: #4CAF50 rgba(0,0,0,0.2);
+        }
+
+        /* KARTU HORIZONTAL */
+        .kartu-horizontal {
+            display: flex; flex-direction: row; 
+            width: 70px; height: 35px;
+            background-color: #fffdf5; color: #b71c1c; 
+            border-radius: 2px; box-shadow: 2px 2px 5px rgba(0,0,0,0.5);
+            flex-shrink: 0; font-size: 20px; font-weight: 900;
+            margin: 0 -1px; z-index: 1; border: 2px solid #222;
+        }
+        .kartu-horizontal .sisi {
+            width: 50%; height: 100%; display: flex; align-items: center; justify-content: center;
+        }
+        .kartu-horizontal .sisi:first-child { border-right: 2px solid #222; } 
+
+        /* KARTU BALAK VERTIKAL */
+        .kartu-vertikal {
+            display: flex; flex-direction: column; 
+            width: 35px; height: 70px;
+            background-color: #fffdf5; color: #b71c1c; 
+            border-radius: 2px; box-shadow: 2px 2px 5px rgba(0,0,0,0.5);
+            flex-shrink: 0; font-size: 20px; font-weight: 900;
+            margin: 0 -1px; z-index: 2; border: 2px solid #222;
+        }
+        .kartu-vertikal .sisi {
+            width: 100%; height: 50%; display: flex; align-items: center; justify-content: center;
+        }
+        .kartu-vertikal .sisi:first-child { border-bottom: 2px solid #222; }
+
+        /* TANGAN PEMAIN */
+        .area-pemain { margin-top: 30px; position: relative; z-index: 10; }
+        button.kartu-horizontal {
+            cursor: pointer; margin: 0 5px; transition: transform 0.2s; outline: none;
+        }
+        button.kartu-horizontal:hover { transform: translateY(-15px); background-color: #ffe082; }
+        
+        .pesan-sistem { background-color: #FFD54F; color: #333; padding: 12px 25px; border-radius: 30px; display: inline-block; font-weight: bold; font-size: 16px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); border: 2px solid #F57F17; position: relative; z-index: 10;}
+        .btn-reset { background-color: #d32f2f; color: white; border: none; padding: 10px 20px; font-size: 16px; border-radius: 5px; cursor: pointer; margin-top: 30px; font-weight: bold; position: relative; z-index: 10;}
+        .btn-pass { background-color: #424242; color: white; border: 2px solid #222; padding: 10px 25px; font-size: 16px; border-radius: 30px; cursor: pointer; font-weight: bold; margin-bottom: 20px;}
+        .btn-bot { background-color: #1976D2; color: white; border: 2px solid #0D47A1; padding: 15px 30px; font-size: 18px; border-radius: 30px; cursor: pointer; font-weight: bold; margin-bottom: 20px; animation: pulse 1.5s infinite;}
+        
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+
+        /* CSS UNTUK ANIMASI LADY DIPINDAH KE SISI ATAS KIRI */
+        .dealer-lady {
+            position: fixed;
+            top: 20px;     /* Dipindah ke sisi atas */
+            left: 20px;    /* Di pojok kiri atas */
+            width: 180px;  /* Ukuran disesuaikan agar pas di atas */
+            z-index: 5;    
+            pointer-events: none; 
+        }
+    </style>
+</head>
+<body>
+    <h1>🏝️ Domino Island Version</h1>
+    
+    <div class="pesan-sistem">{{ pesan|safe }}</div>
+    
+    <p style="margin-bottom:5px; position: relative; z-index: 10;">
+        <span style="{% if giliran == 2 %}color:#FFEB3B; font-weight:bold; font-size:20px;{% endif %}">Bot 1: {{ jumlah_bot1 }} kartu</span> | 
+        <span style="{% if giliran == 3 %}color:#FFEB3B; font-weight:bold; font-size:20px;{% endif %}">Bot 2: {{ jumlah_bot2 }} kartu</span> | 
+        <span style="{% if giliran == 4 %}color:#FFEB3B; font-weight:bold; font-size:20px;{% endif %}">Bot 3: {{ jumlah_bot3 }} kartu</span>
+    </p>
+
+    <!-- AREA MEJA -->
+    <div class="area-meja">
+        <div class="meja-scroll">
+            {% if kartu_di_meja %}
+                {% for kartu in kartu_di_meja %}
+                    {% if kartu.0 == kartu.1 %}
+                        <div class="kartu-vertikal">
+                            <div class="sisi">{{ kartu.0 }}</div>
+                            <div class="sisi">{{ kartu.1 }}</div>
+                        </div>
+                    {% else %}
+                        <div class="kartu-horizontal">
+                            <div class="sisi">{{ kartu.0 }}</div>
+                            <div class="sisi">{{ kartu.1 }}</div>
+                        </div>
+                    {% endif %}
+                {% endfor %}
+            {% else %}
+                <p style="font-style: italic; opacity: 0.7;">Meja masih kosong...</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- AREA KARTU PEMAIN -->
+    <div class="area-pemain">
+        {% if not game_over %}
+            {% if giliran == 1 %}
+                <form method="POST">
+                    {% csrf_token %}
+                    <input type="hidden" name="aksi" value="pass">
+                    <button type="submit" class="btn-pass">⏭️ SAYA PASS (LEWAT)</button>
+                </form>
+                
+                <form method="POST" style="display: flex; justify-content: center; flex-wrap: wrap; margin-top: 10px;">
+                    {% csrf_token %}
+                    <input type="hidden" name="aksi" value="main">
+                    {% for kartu in pemain %}
+                        <button type="submit" name="kartu_idx" value="{{ forloop.counter0 }}" class="kartu-horizontal">
+                            <div class="sisi">{{ kartu.1 }}</div>
+                            <div class="sisi">{{ kartu.3 }}</div>
+                        </button>
+                    {% endfor %}
+                </form>
+            {% else %}
+                <form method="POST">
+                    {% csrf_token %}
+                    <input type="hidden" name="aksi" value="bot_jalan">
+                    <button type="submit" class="btn-bot">🤖 Proses Langkah Bot {{ giliran|add:"-1" }} ...</button>
+                </form>
+                
+                <div style="display: flex; justify-content: center; flex-wrap: wrap; margin-top: 10px; opacity: 0.5; pointer-events: none;">
+                    {% for kartu in pemain %}
+                        <div class="kartu-horizontal">
+                            <div class="sisi">{{ kartu.1 }}</div>
+                            <div class="sisi">{{ kartu.3 }}</div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% else %}
+            <h2 style="color: #FFEB3B;">🏁 Permainan Selesai!</h2>
+        {% endif %}
+    </div>
+
+    <!-- TOMBOL MULAI BARU -->
+    <form method="POST">
+        {% csrf_token %}
+        <input type="hidden" name="aksi" value="reset">
+        <button type="submit" class="btn-reset">🔄 Acak & Main Baru</button>
+    </form>
+
+    <!-- ANIMASI DEALER LADY DI ATAS KIRI -->
+    <img src="{% static 'game/juliush-woman-4353.gif' %}" class="dealer-lady" alt="Dealer Lady">
+
+    <!-- AUDIO BGM DENGAN PENYIMPANAN MEMORI DETIK LAGU -->
+    <audio id="laguLatar" loop>
+        <source src="{% static 'game/ssstik.io_1793875228554.mp3' %}" type="audio/mpeg">
+    </audio>
+
+    <script>
+        var musik = document.getElementById('laguLatar');
+
+        // 1. Ambil posisi detik lagu terakhir sebelum halaman ke-refresh
+        window.addEventListener('DOMContentLoaded', function() {
+            var savedTime = localStorage.getItem('audioTime');
+            if (savedTime !== null) {
+                musik.currentTime = parseFloat(savedTime);
+            }
+            
+            // Coba langsung putar musik secara otomatis
+            musik.play().catch(function(error) {
+                console.log("Autoplay diblokir browser, menunggu interaksi klik pertama.");
+            });
+        });
+
+        // 2. Simpan posisi detik lagu secara berkala ke memori browser (LocalStorage)
+        setInterval(function() {
+            if (!musik.paused) {
+                localStorage.setItem('audioTime', musik.currentTime);
+            }
+        }, 500);
+
+        // 3. Pastikan musik langsung menyala saat ada klik pertama jika sempat terblokir
+        document.body.addEventListener('click', function() {
+            if (musik.paused) {
+                musik.play();
+            }
+        }, { once: true });
+    </script>
+</body>
+</html>
